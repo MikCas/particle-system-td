@@ -6,7 +6,6 @@ struct Particle{
 	// Attributes which are updated during life
 	vec3 pos;
 	vec3 vel;
-	vec3 dir;
 	float age;
 	vec3 size;
 	vec4 color;
@@ -28,7 +27,6 @@ Particle ReadParticle(in uint id) {
 	// --- DYNAMIC ---
     p.pos = TDIn_P(0, id);
     p.vel = TDIn_Vel(0, id);
-    p.dir = TDIn_Dir(0, id);
     p.age = TDIn_Age(0, id);
 
 	// --- STATIC ---
@@ -47,7 +45,6 @@ void WriteParticle(in Particle p) {
     // --- DYNAMIC ---
     P[p.id] = p.pos;
     Vel[p.id] = p.vel;
-    Dir[p.id] = p.dir;
     Age[p.id] = p.age;
     Size[p.id] = p.size;
     Color[p.id] = p.color;

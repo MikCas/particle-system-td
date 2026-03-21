@@ -1,6 +1,5 @@
 ﻿const float MIN_LIFE = 0.01;
 const float MIN_MASS = 0.1;
-const float SPEED_THRESHOLD = 0.001;
 const vec3  DEFAULT_UP = vec3(0.0, 1.0, 0.0);
 
 // Safe normalization to prevent NaNs
@@ -15,16 +14,7 @@ vec3 CalculateForces(in Particle p){
     return noiseForce;
 }
 
-// Update particle direction if particle is moving too fast, to stabilise movement
-// vec3 vel: Velocity value to compare 
-// vec3 defaultDir: Default direction to use if check fails 
-void CheckVelocity(inout Particle p, in vec3 vel, in vec3 defaultDir){
-    float speed = length(vel);
-    vec3 vDir = safe_normalize(vel, defaultDir);                    // Determine the direction from the velocity, or use fallback
-    p.dir = mix(defaultDir, vDir, step(SPEED_THRESHOLD, speed));    // Update direction only if speed threshold is met
-}
-
-// Bound particle position to uniform cube 
+// Bound particle position to uniform cube
 // float size [0, inf]: Cube size 
 // restitution []     : Energy loss from impact, [0, 1]
 void CheckBounds(inout Particle p, float size, float restitution) {
@@ -54,13 +44,10 @@ void UpdatePosition(inout Particle p, float dt, vec3 F, float massInfluence, flo
 
     // --- UPDATE VELOCITY (v = v + a) ---
     p.vel *= exp(-velDamp * dt);
-    p.vel += acc * dt; 
-    
-    // Safety check: Don't normalize near-zero vectors to avoid NaNs
-    CheckVelocity(p, p.vel, p.dir);
+    p.vel += acc * dt;
 
     // --- UPDATE POSITION (p = p + v) ---
-	p.pos += p.vel * dt;
+    p.pos += p.vel * dt;
 }
 
 // Reset particle attributes 
@@ -74,17 +61,16 @@ void onDeath(inout Particle p, float seed) {
     // --- POS  ---
     p.pos = randGaussian3(TDIn_PosMean(0, p.id), uPosStd, vec2(seed, 2.0));
 
-    // --- VELOCITY (DIR, SPEED)  ---
-    vec3 randomDir = randGaussian3(uDirMean, uDirStd, vec2(seed, 3.0)); // Random non-normalised direction vector
+    // --- VELOCITY  ---
+    vec3 randomDir = randGaussian3(uDirMean, uDirStd, vec2(seed, 3.0));
     float speed = max(0.0, randGaussian(uSpeedMeanStd.x, uSpeedMeanStd.y, vec2(seed, 4.0)));
-    CheckVelocity(p, randomDir, DEFAULT_UP);
-    p.vel = normalize(p.dir) * speed;
+    p.vel = safe_normalize(randomDir, DEFAULT_UP) * speed;
 
     // --- SIZE  ---
     p.baseSize = randPower3(uSizeMin, uSizeMax, uSizeExp, vec2(seed, 5.0));
 
     // --- MASS  ---
-    // density = mass * volume
+    // mass = volume * density
     float volume = p.baseSize.x * p.baseSize.y * p.baseSize.z;
     p.mass = max(MIN_MASS, volume * uDensity);
 

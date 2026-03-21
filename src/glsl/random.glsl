@@ -12,20 +12,6 @@ float rand(vec2 st) {
     return hash12(st);
 }
 
-// Random float [-1.0, 1.0]
-float rand11(vec2 st){
-    return rand(st) * 2.0 - 1.0;
-}
-
-// Uniform Random Vec3 [0.0, 1.0] 
-vec3 rand3(vec2 st){
-    return vec3(
-        rand(st),
-        rand(st + vec2(42.1, 78.2)), 
-        rand(st + vec2(12.5, 69.1))
-    );
-}
-
 // Gaussian Distribution (1D) using Box-Muller (Pair)
 vec2 randGaussian2(float mean, float stdDev, vec2 st) {
     float u1 = max(1e-6, rand(st)); // Safety: Prevent log(0)
@@ -53,14 +39,6 @@ vec3 randGaussian3(vec3 mean, vec3 stdDev, vec2 st) {
     return mean + result * stdDev;
 }
 
-// 4D Gaussian
-vec4 randGaussian4(vec4 mean, vec4 stdDev, vec2 st) {
-    vec2 g1 = randGaussian2(0.0, 1.0, st);
-    vec2 g2 = randGaussian2(0.0, 1.0, st + vec2(100.0, 100.0));
-    
-    return mean + vec4(g1, g2) * stdDev;
-}
-
 // Power Distribution
 // Useful for particle sizes (many small, few large).
 // exponent > 1.0 = Biased toward minVal
@@ -78,33 +56,3 @@ vec3 randPower3(vec3 minVal, vec3 maxVal, vec3 exponent, vec2 st) {
     );
 }
 
-// Random Point on Sphere Surface
-vec3 randOnSphere(vec2 st) {
-    float u = rand(st);
-    float v = rand(st + vec2(31.4, 15.9));
-    
-    float theta = 2.0 * PI * u;
-    float z = 2.0 * v - 1.0;
-    float r = sqrt(max(0.0, 1.0 - z * z));
-
-    return vec3(r * cos(theta), r * sin(theta), z);
-}
-
-// Random Point inside Sphere
-vec3 randInSphere(vec2 st) {
-    vec3 p = randOnSphere(st);
-    float u = rand(st + vec2(92.1, 11.2));
-    float r = pow(u, 1.0/3.0); // Cube root for volume uniformity
-    return p * r;
-}
-
-// Random Point inside a 2D Disk
-vec2 randInDisk(float radius, vec2 st) {
-    float u = rand(st);
-    float v = rand(st + vec2(11.1, 44.4));
-    
-    float r = radius * sqrt(u); // Sqrt for area uniformity
-    float theta = 2.0 * PI * v;
-    
-    return vec2(r * cos(theta), r * sin(theta));
-}
