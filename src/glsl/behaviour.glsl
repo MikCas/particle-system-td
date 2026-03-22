@@ -92,16 +92,6 @@ void onDeath(inout Particle p) {
     float speed = max(0.0, randGaussian(uSpeed.x, uSpeed.y, vec2(p.seed, 4.0)));
     CheckVelocity(p, randomDir, DEFAULT_UP);
     p.vel = normalize(p.dir) * speed;
-
-    // --- COLOR ---
-    float h = fract(uHue.x + rand(vec2(p.seed, 6.0)) * uHue.y); 
-    float s = uSaturation.x + rand(vec2(p.seed, 7.0)) * uSaturation.y; 
-    float v = uBrightness.x + rand(vec2(p.seed, 8.0)) * uBrightness.y; 
-
-    // Make the End Color a shifted version of the start (e.g., +0.1 hue shift)
-    p.startColor = vec4(hsv2rgb(vec3(h, s, v)), 1.0);
-    float hEnd = fract(h + uHueShift); 
-    p.endColor = vec4(hsv2rgb(vec3(hEnd, s, v)), 1.0); 
 }
 
 // Update physical attributes
@@ -126,8 +116,16 @@ void UpdateColor(inout Particle p, float t) {
     float decayMask = GetDecayMask(t, uColorEnvelope.y);
     float envelope  = TrapezoidEnvelope(t, uColorEnvelope.x, uColorEnvelope.y);
 
+    // --- COLOR ---
+    float h = DeriveHue(p.seed);
+    float s = uSaturation.x + rand(vec2(p.seed, 7.0)) * uSaturation.y; 
+    float v = uBrightness.x + rand(vec2(p.seed, 8.0)) * uBrightness.y; 
+
+    vec3 startColor = hsv2rgb(vec3(h, s, v));
+    vec3 endColor   = hsv2rgb(vec3(fract(h + uHueShift), s, v));
+
     // --- COLOR MIXING ---
-    vec3 baseColor = mix(p.startColor.rgb, p.endColor.rgb, t);  // Interpolate base gradient
+    vec3 baseColor = mix(startColor.rgb, endColor.rgb, t);  // Interpolate base gradient
     p.color.rgb = mix(baseColor, uFlashColor, decayMask); // Mix to Flash Color based on decayMask
 
     // --- ALPHA MIXING ---

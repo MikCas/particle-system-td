@@ -9,8 +9,6 @@ struct Particle{
     vec3 dir;
 	vec3 size;
 	vec4 color;
-	vec4 startColor;
-	vec4 endColor;
 };
 
 // Read particle data from glsl pop
@@ -24,8 +22,6 @@ Particle ReadParticle(in uint id) {
     p.seed = TDIn_Seed(0, id);
 
     p.dir = TDIn_Dir(0, id);
-    p.startColor = TDIn_StartColor(0, id);
-    p.endColor = TDIn_EndColor(0, id);
     
     return p;
 }
@@ -42,7 +38,5 @@ void WriteParticle(in Particle p) {
     Color[p.id] = p.color;
 
     Dir[p.id] = p.dir;
-    StartColor[p.id] = p.startColor;
-    EndColor[p.id] = p.endColor;
 }
 
