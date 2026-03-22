@@ -31,6 +31,7 @@ void WriteParticle(in Particle p) {
     Age[p.id] = p.age;
     Life[p.id] = p.life;
     Seed[p.id] = p.seed;
+    
     Size[p.id] = p.size;
     Color[p.id] = p.color;
 }
