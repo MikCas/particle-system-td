@@ -6,7 +6,6 @@ struct Particle{
 	float age, life;
     float seed;
 
-    vec3 dir;
 	vec3 size;
 	vec4 color;
 };
@@ -20,8 +19,6 @@ Particle ReadParticle(in uint id) {
     p.age = TDIn_Age(0, id);
     p.life = TDIn_Life(0, id);
     p.seed = TDIn_Seed(0, id);
-
-    p.dir = TDIn_Dir(0, id);
     
     return p;
 }
@@ -36,7 +33,5 @@ void WriteParticle(in Particle p) {
     Seed[p.id] = p.seed;
     Size[p.id] = p.size;
     Color[p.id] = p.color;
-
-    Dir[p.id] = p.dir;
 }
 

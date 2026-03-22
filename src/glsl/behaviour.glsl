@@ -11,11 +11,11 @@ vec3 CalculateForces(in Particle p){
 
 // Update particle direction if particle is moving too fast, to stabilise movement
 // vec3 vel: Velocity value to compare 
-// vec3 defaultDir: Default direction to use if check fails 
-void CheckVelocity(inout Particle p, in vec3 vel, in vec3 defaultDir){
+// vec3 fallback: Default direction to use if check fails 
+vec3 CheckVelocity(vec3 vel, vec3 fallback){
     float speed = length(vel);
-    vec3 vDir = safe_normalize(vel, defaultDir);                    // Determine the direction from the velocity, or use fallback
-    p.dir = mix(defaultDir, vDir, step(SPEED_THRESHOLD, speed));    // Update direction only if speed threshold is met
+    vec3 dir = safe_normalize(vel, fallback);                    // Determine the direction from the velocity, or use fallback
+    return mix(fallback, dir, step(SPEED_THRESHOLD, speed));    // Update direction only if speed threshold is met
 }
 
 // Bound particle position to uniform cube 
@@ -49,9 +49,6 @@ void UpdatePosition(inout Particle p, float dt, vec3 F, float mass, float massIn
     // --- UPDATE VELOCITY (v = v + a) ---
     p.vel *= exp(-damping * dt);
     p.vel += acc * dt; 
-    
-    // Safety check: Don't normalize near-zero vectors to avoid NaNs
-    CheckVelocity(p, p.vel, p.dir);
 
     // --- UPDATE POSITION (p = p + v) ---
 	p.pos += p.vel * dt;
@@ -90,8 +87,8 @@ void onDeath(inout Particle p) {
     // --- VELOCITY ---
     vec3 randomDir = randGaussian3(uDirection, uDirSpread, vec2(p.seed, 3.0)); // Random non-normalised direction vector
     float speed = max(0.0, randGaussian(uSpeed.x, uSpeed.y, vec2(p.seed, 4.0)));
-    CheckVelocity(p, randomDir, DEFAULT_UP);
-    p.vel = normalize(p.dir) * speed;
+    vec3 dir = CheckVelocity(randomDir, DEFAULT_UP);
+    p.vel = dir * speed;
 }
 
 // Update physical attributes
