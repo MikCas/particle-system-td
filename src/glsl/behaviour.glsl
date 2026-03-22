@@ -1,23 +1,14 @@
 ﻿// === CONSTANTS ===
-const float MIN_LIFE = 0.01;
-const float MIN_MASS = 0.1;
+const float MIN_LIFE = 0.001;
+const float MIN_MASS = 0.01;
 const float SPEED_THRESHOLD = 0.001;
-const vec3  DEFAULT_UP = vec3(0.0, 1.0, 0.0);
+const vec3  UP = vec3(0.0, 1.0, 0.0);
 
 // === PHYSICS ===
 // Calculate the forces acting upon a particle
 vec3 CalculateForces(in Particle p){
     vec3 noiseForce = TDIn_NoiseCurl(0, p.id);
     return noiseForce;
-}
-
-// Update particle direction if particle is moving too fast, to stabilise movement
-// vec3 vel: Velocity value to compare 
-// vec3 fallback: Default direction to use if check fails 
-vec3 SafeDirection(vec3 vel, vec3 fallback){
-    float speed = length(vel);
-    vec3 dir = safe_normalize(vel, fallback);                   // Determine the direction from the velocity, or use fallback
-    return mix(fallback, dir, step(SPEED_THRESHOLD, speed));    // Update direction only if speed threshold is met
 }
 
 // Bound particle position to uniform cube 
@@ -38,53 +29,36 @@ void CheckBounds(inout Particle p, float size, float restitution) {
     p.pos = clamp(p.pos, -size, size);                             
 }
 
-// Update the new position of a particle at the current timestep
-// vec3 F: Total force acting upon a particle 
-// float massInfluence [0, 1]     : 
-// float velDamp []               : 
-void UpdatePosition(inout Particle p, float dt, vec3 F, float mass, float massInfluence, float damping){
-
-    // --- CALCULATE ACCELERATION (a = F/m) ---
-    float effectiveMass = mix(1.0, mass, massInfluence);
-    vec3 acc = F / effectiveMass;                          
-
-    // --- UPDATE VELOCITY (v = v + a) ---
-    p.vel *= exp(-damping * dt);
-    p.vel += acc * dt; 
-
-    // --- UPDATE POSITION (p = p + v) ---
-	p.pos += p.vel * dt;
-}
-
 // === LIFECYCLE ===
-// Reset particle attributes 
-void onDeath(inout Particle p) {
+void Reset(inout Particle p) {
 
-    // --- SEED ---
     p.seed = rand(vec2(float(p.id) * 0.1234, fract(uTime)));
 
-    // --- AGE  ---
     p.age = max(MIN_LIFE, randGaussian(uLife.x, uLife.y, vec2(p.seed, 1.0)));
     p.life = p.age;
 
-    // --- POS  ---
     p.pos = randGaussian3(TDIn_PosMean(0, p.id), uPosSpread, vec2(p.seed, 2.0));
 
-    // --- VELOCITY ---
-    vec3 dir  = SafeDirection(randGaussian3(uDirection, uDirSpread, vec2(p.seed, 3.0)), DEFAULT_UP);
-    float spd = max(0.0, randGaussian(uSpeed.x, uSpeed.y, vec2(p.seed, 4.0)));
-    p.vel = dir * spd;
+    vec3 dir  = SafeNormalize(randGaussian3(uDirection, uDirSpread, vec2(p.seed, 3.0)), SPEED_THRESHOLD, UP);
+    float speed = max(0.0, randGaussian(uSpeed.x, uSpeed.y, vec2(p.seed, 4.0)));
+    p.vel = dir * speed;
 }
 
-// Update physical attributes
-void onLife(inout Particle p, float dt) {
+void Update(inout Particle p, float dt) {
 
     vec3 baseSize = randPower3(uSizeMin, uSizeMax, uSizeBias, vec2(p.seed, 5.0));
     float volume = baseSize.x * baseSize.y * baseSize.z;
     float mass = max(MIN_MASS, volume * uDensity);
     
     vec3 F = CalculateForces(p);
-    UpdatePosition(p, dt, F, mass, uMassInfluence, uDamping);
+
+    float effectiveMass = mix(1.0, mass, uMassInfluence);   // Calculate Acceleration (a = F/m)
+    vec3 acc = F / effectiveMass;                          
+
+    p.vel *= exp(-uDamping * dt);                           // Update Velocity (v = v + a)
+    p.vel += acc * dt; 
+
+	p.pos += p.vel * dt;                                    // Update Position (p = p + v)
     CheckBounds(p, uBoundsSize, uRestitution);
 }
 

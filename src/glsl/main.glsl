@@ -5,25 +5,17 @@
 
 void main() {   
 
-    // --- READ PARTICLE ---
     const uint id = TDIndex();
     if (id >= TDNumElements()) return;
-
     Particle p = ReadParticle(id);
 
-    p.age -= uDelta;    // Decrement age 
-
-    // --- DEATH ---
-    if (p.age <= 0.0) {
-        onDeath(p);
-    // --- ALIVE ---
+    p.age -= uDelta;       // Decrement age 
+    if (p.age <= 0.0) {    // Death
+        Reset(p);
     } else { 
-        onLife(p, uDelta);
+        Update(p, uDelta); // Alive
     }
     
-    // --- RENDER ---
     RenderParticle(p);
-    
-    // --- WRITE PARTICLE ---
     WriteParticle(p);
 }

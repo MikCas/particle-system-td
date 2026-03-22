@@ -32,6 +32,7 @@ void WriteParticle(in Particle p) {
     Life[p.id] = p.life;
     Seed[p.id] = p.seed;
     
+    // Output attributes
     Size[p.id] = p.size;
     Color[p.id] = p.color;
 }

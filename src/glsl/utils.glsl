@@ -1,5 +1,41 @@
 const float PI = 3.14159265359;
 
+
+float TrapezoidEnvelope(float t, float attack, float decay) {
+    float fadeIn = smoothstep(0.0, attack, t);
+    float fadeOut = 1.0 - smoothstep(1.0 - decay, 1.0, t);
+    return fadeIn * fadeOut;
+}
+
+// Output mask between [0.0, 1.0] based on end-of-life duration
+// duration: Length of the decay window (0 to 1)
+// float decay [0, 1]: Decay duration
+float GetDecayMask(float t, float duration) {
+    float start = 1.0 - max(0.001, duration); // Ensure mask doesn't break at 0 decay
+    return smoothstep(start, 1.0, t); 
+}
+
+// Converts HSV (Hue, Saturation, Value) to RGB
+// hsv.x = Hue (0.0 - 1.0)
+// hsv.y = Saturation (0.0 - 1.0)
+// hsv.z = Value (Brightness) (0.0 - 1.0)
+vec3 hsv2rgb(vec3 c) {
+    vec4 K = vec4(1.0, 2.0 / 3.0, 1.0 / 3.0, 3.0);
+    vec3 p = abs(fract(c.xxx + K.xyz) * 6.0 - K.www);
+    return c.z * mix(K.xxx, clamp(p - K.xxx, 0.0, 1.0), c.y);
+}
+
+// Safe normalization to prevent NaNs, if particle is moving too fast then stabilise movement.
+// vec3 vel: Velocity value to compare 
+// float thres: Threshold value to determine if check fails
+// vec3 fallback: Default direction to use if check fails 
+vec3 SafeNormalize(vec3 v, float thres, vec3 fallback) {
+    float len = length(v);
+    return (len > thres) ? v / len : fallback;
+}
+
+// === RANDOM ===
+
 // "Gold Noise" Hash
 float hash12(vec2 p) {
     vec3 p3  = fract(vec3(p.xyx) * .1031);
@@ -56,32 +92,3 @@ vec3 randPower3(vec3 minVal, vec3 maxVal, vec3 exponent, vec2 st) {
     );
 }
 
-float TrapezoidEnvelope(float t, float attack, float decay) {
-    float fadeIn = smoothstep(0.0, attack, t);
-    float fadeOut = 1.0 - smoothstep(1.0 - decay, 1.0, t);
-    return fadeIn * fadeOut;
-}
-
-// Output mask between [0.0, 1.0] based on end-of-life duration
-// duration: Length of the decay window (0 to 1)
-// float decay [0, 1]: Decay duration
-float GetDecayMask(float t, float duration) {
-    float start = 1.0 - max(0.001, duration); // Ensure mask doesn't break at 0 decay
-    return smoothstep(start, 1.0, t); 
-}
-
-// Converts HSV (Hue, Saturation, Value) to RGB
-// hsv.x = Hue (0.0 - 1.0)
-// hsv.y = Saturation (0.0 - 1.0)
-// hsv.z = Value (Brightness) (0.0 - 1.0)
-vec3 hsv2rgb(vec3 c) {
-    vec4 K = vec4(1.0, 2.0 / 3.0, 1.0 / 3.0, 3.0);
-    vec3 p = abs(fract(c.xxx + K.xyz) * 6.0 - K.www);
-    return c.z * mix(K.xxx, clamp(p - K.xxx, 0.0, 1.0), c.y);
-}
-
-// Safe normalization to prevent NaNs
-vec3 safe_normalize(vec3 v, vec3 fallback) {
-    float len = length(v);
-    return (len > 1e-6) ? v / len : fallback;
-}
