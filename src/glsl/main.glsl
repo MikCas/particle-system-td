@@ -15,8 +15,7 @@ void main() {
 
     // --- DEATH ---
     if (p.age <= 0.0) {
-        float seed = rand(vec2(float(id) * 0.1234, fract(uTime)));
-        onDeath(p, seed);
+        onDeath(p);
     // --- ALIVE ---
     } else { 
         onLife(p, uDelta);

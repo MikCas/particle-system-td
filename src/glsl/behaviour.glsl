@@ -58,24 +58,26 @@ void UpdatePosition(inout Particle p, float dt, vec3 F, float massInfluence, flo
 }
 
 // Reset particle attributes 
-// float seed [0, inf]: Seed for randomisnig attributes  
-void onDeath(inout Particle p, float seed) {
+void onDeath(inout Particle p) {
+
+    // --- SEED ---
+    p.seed = rand(vec2(float(p.id) * 0.1234, fract(uTime)));
 
     // --- AGE  ---
-    p.age = max(MIN_LIFE, randGaussian(uLife.x, uLife.y, vec2(seed, 1.0)));
+    p.age = max(MIN_LIFE, randGaussian(uLife.x, uLife.y, vec2(p.seed, 1.0)));
     p.life = p.age;
 
     // --- POS  ---
-    p.pos = randGaussian3(TDIn_PosMean(0, p.id), uPosSpread, vec2(seed, 2.0));
+    p.pos = randGaussian3(TDIn_PosMean(0, p.id), uPosSpread, vec2(p.seed, 2.0));
 
-    // --- VELOCITY (DIR, SPEED)  ---
-    vec3 randomDir = randGaussian3(uDirection, uDirSpread, vec2(seed, 3.0)); // Random non-normalised direction vector
-    float speed = max(0.0, randGaussian(uSpeed.x, uSpeed.y, vec2(seed, 4.0)));
+    // --- VELOCITY ---
+    vec3 randomDir = randGaussian3(uDirection, uDirSpread, vec2(p.seed, 3.0)); // Random non-normalised direction vector
+    float speed = max(0.0, randGaussian(uSpeed.x, uSpeed.y, vec2(p.seed, 4.0)));
     CheckVelocity(p, randomDir, DEFAULT_UP);
     p.vel = normalize(p.dir) * speed;
 
     // --- SIZE  ---
-    p.baseSize = randPower3(uSizeMin, uSizeMax, uSizeBias, vec2(seed, 5.0));
+    p.baseSize = randPower3(uSizeMin, uSizeMax, uSizeBias, vec2(p.seed, 5.0));
 
     // --- MASS  ---
     // density = mass * volume
@@ -83,9 +85,9 @@ void onDeath(inout Particle p, float seed) {
     p.mass = max(MIN_MASS, volume * uDensity);
 
     // --- COLOR ---
-    float h = fract(uHue.x + rand(vec2(seed, 6.0)) * uHue.y); 
-    float s = uSaturation.x + rand(vec2(seed, 7.0)) * uSaturation.y; 
-    float v = uBrightness.x + rand(vec2(seed, 8.0)) * uBrightness.y; 
+    float h = fract(uHue.x + rand(vec2(p.seed, 6.0)) * uHue.y); 
+    float s = uSaturation.x + rand(vec2(p.seed, 7.0)) * uSaturation.y; 
+    float v = uBrightness.x + rand(vec2(p.seed, 8.0)) * uBrightness.y; 
 
     // Make the End Color a shifted version of the start (e.g., +0.1 hue shift)
     p.startColor = vec4(hsv2rgb(vec3(h, s, v)), 1.0);
@@ -98,6 +100,23 @@ void onLife(inout Particle p, float dt) {
     vec3 F = CalculateForces(p);
     UpdatePosition(p, dt, F, uMassInfluence, uDamping);
     CheckBounds(p, uBoundsSize, uRestitution);
+}
+
+// Derive per-particle size from seed + uniforms
+vec3 DeriveBaseSize(float seed) {
+    return randPower3(uSizeMin, uSizeMax, uSizeBias, vec2(seed, 5.0));
+}
+
+// Derive per-particle mass from seed + uniforms
+float DeriveMass(float seed) {
+    vec3 s = DeriveBaseSize(seed);
+    float volume = s.x * s.y * s.z;
+    return max(MIN_MASS, volume * uDensity);
+}
+
+// Derive per-particle hue from seed
+float DeriveHue(float seed) {
+    return fract(uHue.x + rand(vec2(seed, 6.0)) * uHue.y);
 }
 
 // Output mask between [0.0, 1.0] based on end-of-life duration
