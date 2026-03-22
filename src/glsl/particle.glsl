@@ -9,7 +9,6 @@ struct Particle{
     vec3 dir;
 	vec3 size;
 	vec4 color;
-	vec3 baseSize;
 	vec4 startColor;
 	vec4 endColor;
 };
@@ -25,7 +24,6 @@ Particle ReadParticle(in uint id) {
     p.seed = TDIn_Seed(0, id);
 
     p.dir = TDIn_Dir(0, id);
-    p.baseSize = TDIn_BaseSize(0, id);  
     p.startColor = TDIn_StartColor(0, id);
     p.endColor = TDIn_EndColor(0, id);
     
@@ -44,7 +42,6 @@ void WriteParticle(in Particle p) {
     Color[p.id] = p.color;
 
     Dir[p.id] = p.dir;
-    BaseSize[p.id] = p.baseSize;
     StartColor[p.id] = p.startColor;
     EndColor[p.id] = p.endColor;
 }

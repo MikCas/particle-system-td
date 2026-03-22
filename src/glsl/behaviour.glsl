@@ -93,9 +93,6 @@ void onDeath(inout Particle p) {
     CheckVelocity(p, randomDir, DEFAULT_UP);
     p.vel = normalize(p.dir) * speed;
 
-    // --- SIZE  ---
-    p.baseSize = randPower3(uSizeMin, uSizeMax, uSizeBias, vec2(p.seed, 5.0));
-
     // --- COLOR ---
     float h = fract(uHue.x + rand(vec2(p.seed, 6.0)) * uHue.y); 
     float s = uSaturation.x + rand(vec2(p.seed, 7.0)) * uSaturation.y; 
@@ -149,7 +146,8 @@ void UpdateSize(inout Particle p, float t) {
     float implosion = 1.0 - decayMask; // Calculate how much to shrink during the flash (decay)
     float flashScale = max(0.3, implosion); // Clamp so it never shrinks below 30% (0.3) during the flash
 
-    p.size = p.baseSize * envelope * flashScale;
+    vec3 baseSize = DeriveBaseSize(p.seed);
+    p.size = baseSize * envelope * flashScale;
 }
 
 // Update visual attributes
