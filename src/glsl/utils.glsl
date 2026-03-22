@@ -13,3 +13,9 @@ vec3 hsv2rgb(vec3 c) {
     vec3 p = abs(fract(c.xxx + K.xyz) * 6.0 - K.www);
     return c.z * mix(K.xxx, clamp(p - K.xxx, 0.0, 1.0), c.y);
 }
+
+// Safe normalization to prevent NaNs
+vec3 safe_normalize(vec3 v, vec3 fallback) {
+    float len = length(v);
+    return (len > 1e-6) ? v / len : fallback;
+}

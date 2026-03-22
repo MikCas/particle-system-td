@@ -3,12 +3,6 @@ const float MIN_MASS = 0.1;
 const float SPEED_THRESHOLD = 0.001;
 const vec3  DEFAULT_UP = vec3(0.0, 1.0, 0.0);
 
-// Safe normalization to prevent NaNs
-vec3 safe_normalize(vec3 v, vec3 fallback) {
-    float len = length(v);
-    return (len > 1e-6) ? v / len : fallback;
-}
-
 // Calculate the forces acting upon a particle
 vec3 CalculateForces(in Particle p){
     vec3 noiseForce = TDIn_NoiseCurl(0, p.id);
