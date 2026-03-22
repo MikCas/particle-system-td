@@ -68,20 +68,20 @@ void UpdatePosition(inout Particle p, float dt, vec3 F, float massInfluence, flo
 void onDeath(inout Particle p, float seed) {
 
     // --- AGE  ---
-    p.age = max(MIN_LIFE, randGaussian(uLifeMeanStd.x, uLifeMeanStd.y, vec2(seed, 1.0)));
+    p.age = max(MIN_LIFE, randGaussian(uLife.x, uLife.y, vec2(seed, 1.0)));
     p.life = p.age;
 
     // --- POS  ---
-    p.pos = randGaussian3(TDIn_PosMean(0, p.id), uPosStd, vec2(seed, 2.0));
+    p.pos = randGaussian3(TDIn_PosMean(0, p.id), uPosSpread, vec2(seed, 2.0));
 
     // --- VELOCITY (DIR, SPEED)  ---
-    vec3 randomDir = randGaussian3(uDirMean, uDirStd, vec2(seed, 3.0)); // Random non-normalised direction vector
-    float speed = max(0.0, randGaussian(uSpeedMeanStd.x, uSpeedMeanStd.y, vec2(seed, 4.0)));
+    vec3 randomDir = randGaussian3(uDirection, uDirSpread, vec2(seed, 3.0)); // Random non-normalised direction vector
+    float speed = max(0.0, randGaussian(uSpeed.x, uSpeed.y, vec2(seed, 4.0)));
     CheckVelocity(p, randomDir, DEFAULT_UP);
     p.vel = normalize(p.dir) * speed;
 
     // --- SIZE  ---
-    p.baseSize = randPower3(uSizeMin, uSizeMax, uSizeExp, vec2(seed, 5.0));
+    p.baseSize = randPower3(uSizeMin, uSizeMax, uSizeBias, vec2(seed, 5.0));
 
     // --- MASS  ---
     // density = mass * volume
@@ -95,14 +95,14 @@ void onDeath(inout Particle p, float seed) {
 
     // Make the End Color a shifted version of the start (e.g., +0.1 hue shift)
     p.startColor = vec4(hsv2rgb(vec3(h, s, v)), 1.0);
-    float hEnd = fract(h + uColorShift); 
+    float hEnd = fract(h + uHueShift); 
     p.endColor = vec4(hsv2rgb(vec3(hEnd, s, v)), 1.0); 
 }
 
 // Update physical attributes
 void onLife(inout Particle p, float dt) {
     vec3 F = CalculateForces(p);
-    UpdatePosition(p, dt, F, uMassInfluence, uVelDamp);
+    UpdatePosition(p, dt, F, uMassInfluence, uDamping);
     CheckBounds(p, uBoundsSize, uRestitution);
 }
 
