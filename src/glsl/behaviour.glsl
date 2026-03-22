@@ -40,14 +40,14 @@ void CheckBounds(inout Particle p, float size, float restitution) {
 // vec3 F: Total force acting upon a particle 
 // float massInfluence [0, 1]     : 
 // float velDamp []               : 
-void UpdatePosition(inout Particle p, float dt, vec3 F, float massInfluence, float velDamp){
+void UpdatePosition(inout Particle p, float dt, vec3 F, float mass, float massInfluence, float damping){
 
     // --- CALCULATE ACCELERATION (a = F/m) ---
-    float mass = mix(1.0, p.mass, massInfluence);
+    mass = mix(1.0, mass, massInfluence);
     vec3 acc = F / mass;                          
 
     // --- UPDATE VELOCITY (v = v + a) ---
-    p.vel *= exp(-velDamp * dt);
+    p.vel *= exp(-damping * dt);
     p.vel += acc * dt; 
     
     // Safety check: Don't normalize near-zero vectors to avoid NaNs
@@ -55,6 +55,23 @@ void UpdatePosition(inout Particle p, float dt, vec3 F, float massInfluence, flo
 
     // --- UPDATE POSITION (p = p + v) ---
 	p.pos += p.vel * dt;
+}
+
+// Derive per-particle size from seed + uniforms
+vec3 DeriveBaseSize(float seed) {
+    return randPower3(uSizeMin, uSizeMax, uSizeBias, vec2(seed, 5.0));
+}
+
+// Derive per-particle mass from seed + uniforms
+float DeriveMass(float seed) {
+    vec3 s = DeriveBaseSize(seed);
+    float volume = s.x * s.y * s.z;
+    return max(MIN_MASS, volume * uDensity);
+}
+
+// Derive per-particle hue from seed
+float DeriveHue(float seed) {
+    return fract(uHue.x + rand(vec2(seed, 6.0)) * uHue.y);
 }
 
 // Reset particle attributes 
@@ -98,26 +115,11 @@ void onDeath(inout Particle p) {
 // Update physical attributes
 void onLife(inout Particle p, float dt) {
     vec3 F = CalculateForces(p);
-    UpdatePosition(p, dt, F, uMassInfluence, uDamping);
+    float mass = DeriveMass(p.seed);
+    UpdatePosition(p, dt, F, mass, uMassInfluence, uDamping);
     CheckBounds(p, uBoundsSize, uRestitution);
 }
 
-// Derive per-particle size from seed + uniforms
-vec3 DeriveBaseSize(float seed) {
-    return randPower3(uSizeMin, uSizeMax, uSizeBias, vec2(seed, 5.0));
-}
-
-// Derive per-particle mass from seed + uniforms
-float DeriveMass(float seed) {
-    vec3 s = DeriveBaseSize(seed);
-    float volume = s.x * s.y * s.z;
-    return max(MIN_MASS, volume * uDensity);
-}
-
-// Derive per-particle hue from seed
-float DeriveHue(float seed) {
-    return fract(uHue.x + rand(vec2(seed, 6.0)) * uHue.y);
-}
 
 // Output mask between [0.0, 1.0] based on end-of-life duration
 // duration: Length of the decay window (0 to 1)
