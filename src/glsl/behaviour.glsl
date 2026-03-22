@@ -96,11 +96,6 @@ void onDeath(inout Particle p) {
     // --- SIZE  ---
     p.baseSize = randPower3(uSizeMin, uSizeMax, uSizeBias, vec2(p.seed, 5.0));
 
-    // --- MASS  ---
-    // density = mass * volume
-    float volume = p.baseSize.x * p.baseSize.y * p.baseSize.z;
-    p.mass = max(MIN_MASS, volume * uDensity);
-
     // --- COLOR ---
     float h = fract(uHue.x + rand(vec2(p.seed, 6.0)) * uHue.y); 
     float s = uSaturation.x + rand(vec2(p.seed, 7.0)) * uSaturation.y; 
