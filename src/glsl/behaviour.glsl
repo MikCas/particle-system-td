@@ -99,15 +99,6 @@ void onLife(inout Particle p, float dt) {
     CheckBounds(p, uBoundsSize, uRestitution);
 }
 
-
-// Output mask between [0.0, 1.0] based on end-of-life duration
-// duration: Length of the decay window (0 to 1)
-// float decay [0, 1]: Decay duration
-float GetDecayMask(float t, float duration) {
-    float start = 1.0 - max(0.001, duration); // Ensure mask doesn't break at 0 decay
-    return smoothstep(start, 1.0, t); 
-}
-
 void UpdateColor(inout Particle p, float t) {
     // --- SETUP MASKS ---
     float decayMask = GetDecayMask(t, uColorEnvelope.y);
