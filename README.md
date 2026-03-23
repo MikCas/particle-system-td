@@ -91,13 +91,13 @@ The system is controlled via Custom Parameters on the TouchDesigner component. T
 | **System** | `Time` | Simulation clock, usually driven by `absTime.seconds`. |
 | | `Number of Points` | Total number of particles in the GPU buffer. |
 | | `Reset` | Pulse to clear all buffers and restart. |
-| **Emission** | `Life Mean` / `Std` | Lifespan in seconds. `Mean` is the average, `Std` is the random variation. |
-| | `Pos Std` (XYZ) | Spawn spread from center. Higher = wider cloud. | <!-- TODO: rename to "Pos Spread" to match GLSL uPosSpread -->
-| | `Dir Mean` (XYZ) | Average direction particles travel when born. |
-| | `Dir Std` (XYZ) | Variation in birth direction. Higher = more scatter. | <!-- TODO: rename to "Dir Spread" to match GLSL uDirSpread -->
+| **Emission** | `Life Mean` / `Spread` | Lifespan in seconds. `Mean` is the average, `Spread` is the random variation. |
+| | `Pos Spread` (XYZ) | Spawn spread from center. Higher = wider cloud. |
+| | `Direction` (XYZ) | Average direction particles travel when born. |
+| | `Dir Spread` (XYZ) | Variation in birth direction. Higher = more scatter.
 | | `Speed Mean` / `Std` | Initial speed magnitude in the birth direction. |
 | **Physics** | `Mass Influence` | How much mass resists forces. `0` = ignored, `1` = full effect. |
-| | `Vel Damping` | Velocity decay. Higher = more air resistance. | <!-- TODO: rename to "Damping" to match GLSL uDamping -->
+| | `Damping` | Velocity decay. Higher = more air resistance. | 
 | | `Bounds Size` | Size of invisible bounding cube. Particles bounce off walls. |
 | | `Restitution` | Bounce energy. `0` = stick, `1` = perfect bounce. |
 | | `Density` | Computes mass from particle volume. |
@@ -105,12 +105,12 @@ The system is controlled via Custom Parameters on the TouchDesigner component. T
 | *(Noise TOP)* | `Speed` / `Exponent` | Animation speed and turbulence of the noise field. |
 | **Size** | `Size Min` (XYZ) | Smallest possible particle scale. |
 | | `Size Max` (XYZ) | Largest possible particle scale. |
-| | `Exp` | Distribution bias. `> 1` = mostly small, `< 1` = mostly large. | <!-- TODO: rename to "Bias" to match GLSL uSizeBias -->
+| | `Bias` | Distribution bias. `> 1` = mostly small, `< 1` = mostly large. |
 | | `Size Attack/Decay` | Fade-in duration at birth / shrink duration at death. |
 | **Color** | `Hue Mean` / `Std` | Base hue (0-1 color wheel) and random variation. |
 | | `Saturation Mean` / `Std` | Color intensity and random variation. |
 | | `Brightness Mean` / `Std` | Brightness and random variation. |
-| | `Color Shift` | Hue shift over lifetime. `1.0` = full color wheel. | <!-- TODO: rename to "Hue Shift" to match GLSL uHueShift -->
+| | `Color Shift` | Hue shift over lifetime. `1.0` = full color wheel. |
 | | `Color Attack/Decay` | Alpha fade-in / fade-out duration. |
 | | `Flash Color` (RGBA) | Color particles flash just before dying. |
 
@@ -144,7 +144,7 @@ Open `ParticleSystem.toe` in TouchDesigner.
 
 ### Import as component
 
-Drag `tox/ParticleSystem.tox` into any TouchDesigner project to use the particle system as a standalone module.
+Drag `tox/ParticleSystem.tox` into any TouchDesigner project to use the particle system as a standalone module. Need to move the `*.glsl` files accordingly. 
 
 ## License
 
