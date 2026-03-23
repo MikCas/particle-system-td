@@ -1,10 +1,9 @@
 void main() {
-	const uint id = TDIndex();
-	if(id >= TDNumElements())
-		return;
 
-	ID[id] = id;
+	const uint id = TDIndex(); 			// Get thread index
+	if(id >= TDNumElements()) return;  
 
-	PosMean[id] = TDIn_P(0, id);
-	Age[id] = -1;
+	ID[id] = id;						// Store ID
+	PosMean[id] = TDIn_P(0, id);		// Copy input position as spawn center 
+	Age[id] = -1;						// Trigger immediate rebirth in main loop (age < 0)
 }

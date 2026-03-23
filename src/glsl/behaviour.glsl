@@ -1,27 +1,14 @@
-﻿const float MIN_LIFE = 0.01;
-const float MIN_MASS = 0.1;
+﻿// === CONSTANTS ===
+const float MIN_LIFE = 0.001;
+const float MIN_MASS = 0.01;
 const float SPEED_THRESHOLD = 0.001;
-const vec3  DEFAULT_UP = vec3(0.0, 1.0, 0.0);
+const vec3  UP = vec3(0.0, 1.0, 0.0);
 
-// Safe normalization to prevent NaNs
-vec3 safe_normalize(vec3 v, vec3 fallback) {
-    float len = length(v);
-    return (len > 1e-6) ? v / len : fallback;
-}
-
+// === PHYSICS ===
 // Calculate the forces acting upon a particle
 vec3 CalculateForces(in Particle p){
     vec3 noiseForce = TDIn_NoiseCurl(0, p.id);
     return noiseForce;
-}
-
-// Update particle direction if particle is moving too fast, to stabilise movement
-// vec3 vel: Velocity value to compare 
-// vec3 defaultDir: Default direction to use if check fails 
-void CheckVelocity(inout Particle p, in vec3 vel, in vec3 defaultDir){
-    float speed = length(vel);
-    vec3 vDir = safe_normalize(vel, defaultDir);                    // Determine the direction from the velocity, or use fallback
-    p.dir = mix(defaultDir, vDir, step(SPEED_THRESHOLD, speed));    // Update direction only if speed threshold is met
 }
 
 // Bound particle position to uniform cube 
@@ -42,94 +29,63 @@ void CheckBounds(inout Particle p, float size, float restitution) {
     p.pos = clamp(p.pos, -size, size);                             
 }
 
-// Update the new position of a particle at the current timestep
-// vec3 F: Total force acting upon a particle 
-// float massInfluence [0, 1]     : 
-// float velDamp []               : 
-void UpdatePosition(inout Particle p, float dt, vec3 F, float massInfluence, float velDamp){
+// === LIFECYCLE ===
+void Reset(inout Particle p) {
 
-    // --- CALCULATE ACCELERATION (a = F/m) ---
-    float mass = mix(1.0, p.mass, massInfluence);
-    vec3 acc = F / mass;                          
+    p.seed = rand(vec2(float(p.id) * 0.1234, fract(uTime)));
 
-    // --- UPDATE VELOCITY (v = v + a) ---
-    p.vel *= exp(-velDamp * dt);
-    p.vel += acc * dt; 
-    
-    // Safety check: Don't normalize near-zero vectors to avoid NaNs
-    CheckVelocity(p, p.vel, p.dir);
-
-    // --- UPDATE POSITION (p = p + v) ---
-	p.pos += p.vel * dt;
-}
-
-// Reset particle attributes 
-// float seed [0, inf]: Seed for randomisnig attributes  
-void onDeath(inout Particle p, float seed) {
-
-    // --- AGE  ---
-    p.age = max(MIN_LIFE, randGaussian(uLifeMeanStd.x, uLifeMeanStd.y, vec2(seed, 1.0)));
+    p.age = max(MIN_LIFE, randGaussian(uLife.x, uLife.y, vec2(p.seed, 1.0)));
     p.life = p.age;
 
-    // --- POS  ---
-    p.pos = randGaussian3(TDIn_PosMean(0, p.id), uPosStd, vec2(seed, 2.0));
+    p.pos = randGaussian3(TDIn_PosMean(0, p.id), uPosSpread, vec2(p.seed, 2.0));
 
-    // --- VELOCITY (DIR, SPEED)  ---
-    vec3 randomDir = randGaussian3(uDirMean, uDirStd, vec2(seed, 3.0)); // Random non-normalised direction vector
-    float speed = max(0.0, randGaussian(uSpeedMeanStd.x, uSpeedMeanStd.y, vec2(seed, 4.0)));
-    CheckVelocity(p, randomDir, DEFAULT_UP);
-    p.vel = normalize(p.dir) * speed;
-
-    // --- SIZE  ---
-    p.baseSize = randPower3(uSizeMin, uSizeMax, uSizeExp, vec2(seed, 5.0));
-
-    // --- MASS  ---
-    // density = mass * volume
-    float volume = p.baseSize.x * p.baseSize.y * p.baseSize.z;
-    p.mass = max(MIN_MASS, volume * uDensity);
-
-    // --- COLOR ---
-    float h = fract(uHue.x + rand(vec2(seed, 6.0)) * uHue.y); 
-    float s = uSaturation.x + rand(vec2(seed, 7.0)) * uSaturation.y; 
-    float v = uBrightness.x + rand(vec2(seed, 8.0)) * uBrightness.y; 
-
-    // Make the End Color a shifted version of the start (e.g., +0.1 hue shift)
-    p.startColor = vec4(hsv2rgb(vec3(h, s, v)), 1.0);
-    float hEnd = fract(h + uColorShift); 
-    p.endColor = vec4(hsv2rgb(vec3(hEnd, s, v)), 1.0); 
+    vec3 dir  = SafeNormalize(randGaussian3(uDirection, uDirSpread, vec2(p.seed, 3.0)), SPEED_THRESHOLD, UP);
+    float speed = max(0.0, randGaussian(uSpeed.x, uSpeed.y, vec2(p.seed, 4.0)));
+    p.vel = dir * speed;
 }
 
-// Update physical attributes
-void onLife(inout Particle p, float dt) {
+void Update(inout Particle p, float dt) {
+
+    vec3 baseSize = randPower3(uSizeMin, uSizeMax, uSizeBias, vec2(p.seed, 5.0));
+    float volume = baseSize.x * baseSize.y * baseSize.z;
+    float mass = max(MIN_MASS, volume * uDensity);
+    
     vec3 F = CalculateForces(p);
-    UpdatePosition(p, dt, F, uMassInfluence, uVelDamp);
+
+    float effectiveMass = mix(1.0, mass, uMassInfluence);   // Calculate Acceleration (a = F/m)
+    vec3 acc = F / effectiveMass;                          
+
+    p.vel *= exp(-uDamping * dt);                           // Update Velocity (v = v + a)
+    p.vel += acc * dt; 
+
+	p.pos += p.vel * dt;                                    // Update Position (p = p + v)
     CheckBounds(p, uBoundsSize, uRestitution);
 }
 
-// Output mask between [0.0, 1.0] based on end-of-life duration
-// duration: Length of the decay window (0 to 1)
-// float decay [0, 1]: Decay duration
-float GetDecayMask(float t, float duration) {
-    float start = 1.0 - max(0.001, duration); // Ensure mask doesn't break at 0 decay
-    return smoothstep(start, 1.0, t); 
-}
-
-void UpdateColor(inout Particle p, float t) {
+// === RENDER ===
+vec4 RenderColor(float seed, float t) {
     // --- SETUP MASKS ---
     float decayMask = GetDecayMask(t, uColorEnvelope.y);
     float envelope  = TrapezoidEnvelope(t, uColorEnvelope.x, uColorEnvelope.y);
 
-    // --- COLOR MIXING ---
-    vec3 baseColor = mix(p.startColor.rgb, p.endColor.rgb, t);  // Interpolate base gradient
-    p.color.rgb = mix(baseColor, uFlashColor, decayMask); // Mix to Flash Color based on decayMask
+    // --- COLOR ---
+    float h = fract(uHue.x + rand(vec2(seed, 6.0)) * uHue.y);
+    float s = uSaturation.x + rand(vec2(seed, 7.0)) * uSaturation.y; 
+    float v = uBrightness.x + rand(vec2(seed, 8.0)) * uBrightness.y; 
 
+    vec3 startColor = hsv2rgb(vec3(h, s, v));
+    vec3 endColor   = hsv2rgb(vec3(fract(h + uHueShift), s, v));
+    
     // --- ALPHA MIXING ---
     // If decayMask is 1.0 (Flash), we want Alpha to be 1.0.
     // If decayMask is 0.0, we want to use the standard envelope (fade out).
-    p.color.a = mix(envelope, 1.0, decayMask);
+
+    vec3 rgb = mix(mix(startColor, endColor, t), uFlashColor.rgb, decayMask);
+    float a  = mix(envelope, 1.0, decayMask);
+    return vec4(rgb, a);
 }
 
-void UpdateSize(inout Particle p, float t) {
+vec3 RenderSize(float seed, float t) {
 
     // --- SETUP MASKS ---
     float decayMask = GetDecayMask(t, uSizeEnvelope.y);
@@ -139,15 +95,14 @@ void UpdateSize(inout Particle p, float t) {
     float implosion = 1.0 - decayMask; // Calculate how much to shrink during the flash (decay)
     float flashScale = max(0.3, implosion); // Clamp so it never shrinks below 30% (0.3) during the flash
 
-    p.size = p.baseSize * envelope * flashScale;
+    vec3 baseSize = randPower3(uSizeMin, uSizeMax, uSizeBias, vec2(seed, 5.0));
+    return baseSize * envelope * flashScale;
 }
 
 // Update visual attributes
 void RenderParticle(inout Particle p){
-    // Invert normalised age (0.0 -> 1.0)
-    // Clamp prevents artifacts for less than 0, Max prevents division by 0
-    float lifeProgress = 1.0 - clamp(p.age / p.life, 0.0, 1.0);
-
-    UpdateSize(p, lifeProgress);
-    UpdateColor(p, lifeProgress);
+    // Life progress: 0.0 at birth -> 1.0 at death
+    float t = 1.0 - clamp(p.age / p.life, 0.0, 1.0);
+    p.color = RenderColor(p.seed, t);
+    p.size = RenderSize(p.seed, t);
 }
