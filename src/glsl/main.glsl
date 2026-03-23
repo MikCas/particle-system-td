@@ -1,6 +1,5 @@
 #include "glsl_particle"
 #include "glsl_utils"
-#include "glsl_random"
 #include "glsl_behaviour"
 
 void main() {   

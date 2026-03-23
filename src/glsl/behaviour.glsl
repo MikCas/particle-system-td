@@ -75,13 +75,13 @@ vec4 RenderColor(float seed, float t) {
 
     vec3 startColor = hsv2rgb(vec3(h, s, v));
     vec3 endColor   = hsv2rgb(vec3(fract(h + uHueShift), s, v));
-
-    vec3 rgb = mix(mix(startColor, endColor, t), uFlashColor.rgb, decayMask);
-    float a  = mix(envelope, 1.0, decayMask);
-
+    
     // --- ALPHA MIXING ---
     // If decayMask is 1.0 (Flash), we want Alpha to be 1.0.
     // If decayMask is 0.0, we want to use the standard envelope (fade out).
+
+    vec3 rgb = mix(mix(startColor, endColor, t), uFlashColor.rgb, decayMask);
+    float a  = mix(envelope, 1.0, decayMask);
     return vec4(rgb, a);
 }
 
@@ -101,8 +101,7 @@ vec3 RenderSize(float seed, float t) {
 
 // Update visual attributes
 void RenderParticle(inout Particle p){
-    // Invert normalised age (0.0 -> 1.0)
-    // Clamp prevents artifacts for less than 0, Max prevents division by 0
+    // Life progress: 0.0 at birth -> 1.0 at death
     float t = 1.0 - clamp(p.age / p.life, 0.0, 1.0);
     p.color = RenderColor(p.seed, t);
     p.size = RenderSize(p.seed, t);

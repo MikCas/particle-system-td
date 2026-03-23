@@ -32,7 +32,7 @@ void WriteParticle(in Particle p) {
     Life[p.id] = p.life;
     Seed[p.id] = p.seed;
     
-    // Output attributes
+    // Output (computed per frame, written for rendering)
     Size[p.id] = p.size;
     Color[p.id] = p.color;
 }

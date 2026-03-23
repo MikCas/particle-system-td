@@ -25,10 +25,7 @@ vec3 hsv2rgb(vec3 c) {
     return c.z * mix(K.xxx, clamp(p - K.xxx, 0.0, 1.0), c.y);
 }
 
-// Safe normalization to prevent NaNs, if particle is moving too fast then stabilise movement.
-// vec3 vel: Velocity value to compare 
-// float thres: Threshold value to determine if check fails
-// vec3 fallback: Default direction to use if check fails 
+// Safe normalization: returns normalized v, or fallback if length is below threshold
 vec3 SafeNormalize(vec3 v, float thres, vec3 fallback) {
     float len = length(v);
     return (len > thres) ? v / len : fallback;
