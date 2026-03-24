@@ -69,7 +69,7 @@ Derived properties like size and color are not saved in memory, yet they stay co
 #### Death
 Death is instantaneous. When age reaches zero, the particle immediately transitions back to Birth (the ε transition in the diagram). The particle count never changes; the pool is always full.
 
-### Summary of Property Updates
+<!-- ### Summary of Property Updates
 
 | Property | Category | Birth State (`Reset`) | Life State (`Update`) |
 |----------|----------|-----------------------|-----------------------|
@@ -80,6 +80,7 @@ Death is instantaneous. When age reaches zero, the particle immediately transiti
 | `mass` | Derived | -- | `volume(size) * uDensity` |
 | `size` | Derived | -- | Base size × envelope(progress) |
 | `color` | Derived | -- | HSV from `seed`, interpolated, with flash |
+-->
 
 
 ## Parameters
