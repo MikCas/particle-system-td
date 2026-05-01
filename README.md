@@ -2,7 +2,9 @@
 
 A particle system is a collection of independent objects, often represented by dots or other simple shapes (see [*The Nature of Code*](https://natureofcode.com/particles/)). Particles move and change over time according to a set of rules (in this case Newtonian mechanics). The patterns that emerge from these simple rules give rise to complex systems.
 
-![Preview](preview.gif)
+<p align="center">
+    ![Preview](preview.gif)    
+</p>
 
 ## How It Works
 
