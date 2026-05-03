@@ -1,8 +1,10 @@
-# Realtime Particle System in TouchDesigner
+# Real-time Particle System in TouchDesigner
 
 A particle system is a collection of independent objects, often represented by dots or other simple shapes (see [*The Nature of Code*](https://natureofcode.com/particles/)). Particles move and change over time according to a set of rules (in this case Newtonian mechanics). The patterns that emerge from these simple rules give rise to complex systems.
 
-![Preview](docs/preview.gif)
+<p align="center">
+      <img src="docs/preview.gif" width="50%">
+</p>
 
 ## How It Works
 
@@ -69,7 +71,7 @@ Derived properties like size and color are not saved in memory, yet they stay co
 #### Death
 Death is instantaneous. When age reaches zero, the particle immediately transitions back to Birth (the ε transition in the diagram). The particle count never changes; the pool is always full.
 
-### Summary of Property Updates
+<!-- ### Summary of Property Updates
 
 | Property | Category | Birth State (`Reset`) | Life State (`Update`) |
 |----------|----------|-----------------------|-----------------------|
@@ -80,6 +82,7 @@ Death is instantaneous. When age reaches zero, the particle immediately transiti
 | `mass` | Derived | -- | `volume(size) * uDensity` |
 | `size` | Derived | -- | Base size × envelope(progress) |
 | `color` | Derived | -- | HSV from `seed`, interpolated, with flash |
+-->
 
 
 ## Parameters
